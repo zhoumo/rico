@@ -31,7 +31,7 @@ public class ClientUtil {
 				for (QQCategory group : qqCategoryList) {
 					List<QQBuddy> buddyList = group.getBuddyList();
 					for (QQBuddy friend : buddyList) {
-						System.out.println("- nick:" + friend.getNickname() + ", uin:" + friend.getUin());
+						System.out.println("name: " + friend.getNickname() + ", uin: " + friend.getUin());
 					}
 				}
 			}

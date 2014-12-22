@@ -20,23 +20,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
 import mine.rico.module.Robot;
 import mine.rico.util.ClientUtil;
+import mine.rico.util.RedisUtil;
+import mine.rico.util.StringUtil;
 
 public class Server {
 
 	private QQClient client;
 
-	private Map<String, QQMsg> msgMap;
+	public static final String QQ_PREFIX = "qq:";
 
 	public Server() {
 		client = new WebQQClient("3166262398", "zhoumo", new QQNotifyHandlerProxy(this), new ThreadActorDispatcher());
-		msgMap = new ConcurrentHashMap<String, QQMsg>();
 	}
 
 	public void login() {
@@ -56,15 +55,14 @@ public class Server {
 		client.login(QQStatus.ONLINE, listener);
 	}
 
-	public void sendMsg() {
-		QQMsg msg = msgMap.get("272500955");
+	public void sendMsg(QQMsg msg, String text) {
 		if (msg == null) {
 			return;
 		}
 		QQMsg newMsg = new QQMsg();
 		newMsg.setType(msg.getType());
 		newMsg.setTo(msg.getFrom());
-		newMsg.addContentItem(new TextItem("hello"));
+		newMsg.addContentItem(new TextItem(text));
 		client.sendMsg(newMsg, new QQActionListener() {
 
 			public void onActionEvent(QQActionEvent event) {
@@ -85,7 +83,7 @@ public class Server {
 	}
 
 	@QQNotifyHandler(QQNotifyEvent.Type.CHAT_MSG)
-	public void processChatMsg(QQNotifyEvent event) {
+	protected void processChatMsg(QQNotifyEvent event) {
 		QQMsg msg = (QQMsg) event.getTarget();
 		StringBuilder text = new StringBuilder(1000);
 		for (ContentItem item : msg.getContentList()) {
@@ -94,22 +92,7 @@ public class Server {
 			}
 		}
 		System.out.println("message: " + text.toString());
-		client.sendMsg(autoReply(msg, text.toString()), new QQActionListener() {
-
-			public void onActionEvent(QQActionEvent event) {
-			}
-		});
-		msgMap.put("272500955", msg);
-	}
-
-	private QQMsg autoReply(QQMsg msg, String text) {
-		QQMsg newMsg = new QQMsg();
-		newMsg.setType(msg.getType());
-		if (msg.getType() == QQMsg.Type.GROUP_MSG) {
-			newMsg.setGroup(msg.getGroup());
-		}
-		newMsg.setTo(msg.getFrom());
-		newMsg.addContentItem(new TextItem(Robot.chat(text)));
-		return newMsg;
+		RedisUtil.set(QQ_PREFIX + msg.getFrom().getUin(), StringUtil.serialize(msg));
+		sendMsg(msg, Robot.chat(text.toString()));
 	}
 }

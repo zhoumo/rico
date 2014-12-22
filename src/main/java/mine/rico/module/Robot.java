@@ -15,7 +15,7 @@ public class Robot {
 
 	private static final String URL = "http://www.simsimi.com/func/reqN?fl=http%3A%2F%2Fwww.simsimi.com%2Ftalk.htm&lc=ch&ft=0.0&req=";
 
-	private static final int REPEAT_TIME = 3;
+	private static final int REPEAT_TIME = 5;
 
 	@SuppressWarnings("serial")
 	private static final Map<String, String> PROPERTIES = new HashMap<String, String>() {
@@ -37,16 +37,15 @@ public class Robot {
 
 	private static String chat(String url, int repeatTime) {
 		if (repeatTime-- == 1) {
-			return "你说什么？敢再说一遍吗？";
+			return "能再说一遍吗？";
 		}
-		String response = null;
 		try {
-			response = new JSONObject(HttpUtil.doGet(url, PROPERTIES)).getString("sentence_resp");
+			String response = HttpUtil.doGet(url, PROPERTIES);
+			return new JSONObject(response).getString("sentence_resp");
 		} catch (IOException e) {
 			return chat(url, repeatTime);
 		} catch (JSONException e) {
-			return "不清楚你在说啥.....";
+			return chat(url, repeatTime);
 		}
-		return response;
 	}
 }
