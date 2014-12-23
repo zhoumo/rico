@@ -1,4 +1,4 @@
-package mine.rico;
+package mine.rico.module;
 
 import iqq.im.QQActionListener;
 import iqq.im.QQClient;
@@ -93,18 +93,18 @@ public class Server {
 				text.append(((TextItem) item).getContent().trim().replaceAll("\t|\r", "")).append("\n");
 			}
 		}
-		String key = String.valueOf(msg.getFrom().getUin());
+		String uin = String.valueOf(msg.getFrom().getUin());
 		boolean reply = true;
 		for (String publishKey : ConfigUtil.get(ConfigUtil.PUBLISH_KEYS).split(",")) {
 			if (text.toString().trim().equals("订阅" + publishKey)) {
-				RedisUtil.set(key, StringUtil.serialize(msg));
-				RedisUtil.hSet(publishKey, key);
+				RedisUtil.set(publishKey + uin, StringUtil.serialize(msg));
+				RedisUtil.hSet(publishKey, uin);
 				sendMsg(msg, "订阅成功！");
 				reply = false;
 			}
 			if (text.toString().trim().equals("取消" + publishKey)) {
-				RedisUtil.del(key);
-				RedisUtil.hDel(publishKey, key);
+				RedisUtil.del(publishKey + uin);
+				RedisUtil.hDel(publishKey, uin);
 				sendMsg(msg, "取消成功！");
 				reply = false;
 			}

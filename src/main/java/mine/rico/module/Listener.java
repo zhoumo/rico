@@ -1,25 +1,24 @@
 package mine.rico.module;
 
 import iqq.im.bean.QQMsg;
-import mine.rico.Server;
 import mine.rico.util.RedisUtil;
 import mine.rico.util.StringUtil;
 import redis.clients.jedis.JedisPubSub;
 
-public class TopicListener extends JedisPubSub {
+public class Listener extends JedisPubSub {
 
 	private Server server;
 
-	public TopicListener(Server server) {
+	public Listener(Server server) {
 		this.server = server;
 	}
 
 	@Override
 	public void onMessage(String channel, String message) {
 		if (RedisUtil.exists(channel)) {
-			for (String key : RedisUtil.hGet(channel).keySet()) {
-				System.out.println(key + "-" + message);
-				server.sendMsg((QQMsg) StringUtil.Deserialize(RedisUtil.get(key)), message);
+			for (String uin : RedisUtil.hGet(channel).keySet()) {
+				System.out.println(channel + "-" + uin + "-" + message);
+				server.sendMsg((QQMsg) StringUtil.Deserialize(RedisUtil.get(channel + uin)), message);
 			}
 		}
 	}
