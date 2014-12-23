@@ -25,6 +25,7 @@ import javax.imageio.ImageIO;
 
 import mine.rico.module.Robot;
 import mine.rico.util.ClientUtil;
+import mine.rico.util.ConfigUtil;
 import mine.rico.util.RedisUtil;
 import mine.rico.util.StringUtil;
 
@@ -32,12 +33,10 @@ public class Server {
 
 	private QQClient client;
 
-	public static final String QQ_PREFIX = "qq:";
-
 	public static boolean RUNNING = false;
 
 	public Server() {
-		client = new WebQQClient("3166262398", "zhoumo", new QQNotifyHandlerProxy(this), new ThreadActorDispatcher());
+		client = new WebQQClient(ConfigUtil.get(ConfigUtil.QQ_NUMBER), ConfigUtil.get(ConfigUtil.QQ_PASSWORD), new QQNotifyHandlerProxy(this), new ThreadActorDispatcher());
 	}
 
 	public void login() {
@@ -94,18 +93,24 @@ public class Server {
 				text.append(((TextItem) item).getContent().trim().replaceAll("\t|\r", "")).append("\n");
 			}
 		}
-		String key = QQ_PREFIX + msg.getFrom().getUin();
-		if (text.toString().trim().equals("订阅" + Launcher.PUB_KEY)) {
-			RedisUtil.set(key, StringUtil.serialize(msg));
-			RedisUtil.hSet(Launcher.PUB_KEY, key);
-			sendMsg(msg, "订阅成功！");
-		} else if (text.toString().trim().equals("取消" + Launcher.PUB_KEY)) {
-			RedisUtil.del(key);
-			RedisUtil.hDel(Launcher.PUB_KEY, key);
-			sendMsg(msg, "取消成功！");
-		} else {
+		String key = String.valueOf(msg.getFrom().getUin());
+		boolean reply = true;
+		for (String publishKey : ConfigUtil.get(ConfigUtil.PUBLISH_KEYS).split(",")) {
+			if (text.toString().trim().equals("订阅" + publishKey)) {
+				RedisUtil.set(key, StringUtil.serialize(msg));
+				RedisUtil.hSet(publishKey, key);
+				sendMsg(msg, "订阅成功！");
+				reply = false;
+			}
+			if (text.toString().trim().equals("取消" + publishKey)) {
+				RedisUtil.del(key);
+				RedisUtil.hDel(publishKey, key);
+				sendMsg(msg, "取消成功！");
+				reply = false;
+			}
+		}
+		if (reply) {
 			sendMsg(msg, Robot.chat(text.toString()));
 		}
-		System.out.println(RedisUtil.hGet(Launcher.PUB_KEY));
 	}
 }
