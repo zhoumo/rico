@@ -94,13 +94,18 @@ public class Server {
 				text.append(((TextItem) item).getContent().trim().replaceAll("\t|\r", "")).append("\n");
 			}
 		}
-		if (text.toString().trim().equals("订阅")) {
-			String key = QQ_PREFIX + msg.getFrom().getUin();
+		String key = QQ_PREFIX + msg.getFrom().getUin();
+		if (text.toString().trim().equals("订阅" + Launcher.PUB_KEY)) {
 			RedisUtil.set(key, StringUtil.serialize(msg));
-			RedisUtil.hSet("订阅", key);
-			sendMsg(msg, "订阅成功");
+			RedisUtil.hSet(Launcher.PUB_KEY, key);
+			sendMsg(msg, "订阅成功！");
+		} else if (text.toString().trim().equals("取消" + Launcher.PUB_KEY)) {
+			RedisUtil.del(key);
+			RedisUtil.hDel(Launcher.PUB_KEY, key);
+			sendMsg(msg, "取消成功！");
 		} else {
 			sendMsg(msg, Robot.chat(text.toString()));
 		}
+		System.out.println(RedisUtil.hGet(Launcher.PUB_KEY));
 	}
 }

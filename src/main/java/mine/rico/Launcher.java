@@ -1,22 +1,29 @@
 package mine.rico;
 
-import iqq.im.bean.QQMsg;
+import mine.rico.module.TopicListener;
 import mine.rico.util.RedisUtil;
-import mine.rico.util.StringUtil;
 
 public class Launcher {
 
+	public static final String PUB_KEY = "TEST";
+
 	public static void main(String[] args) throws InterruptedException {
-		Server server = new Server();
+		final Server server = new Server();
 		server.login();
+		boolean isSub = false;
 		while (true) {
 			Thread.sleep(10000);
-			if (RedisUtil.exists("订阅") && Server.RUNNING) {
-				for (String key : RedisUtil.hGet("订阅").keySet()) {
-					if (!RedisUtil.exists(key)) {
-						continue;
+			if (RedisUtil.exists(PUB_KEY) && Server.RUNNING) {
+				for (String key : RedisUtil.hGet(PUB_KEY).keySet()) {
+					if (RedisUtil.exists(key) && !isSub) {
+						new Thread(new Runnable() {
+
+							public void run() {
+								RedisUtil.subscribe(PUB_KEY, new TopicListener(server));
+							}
+						}).start();
+						isSub = true;
 					}
-					server.sendMsg((QQMsg) StringUtil.Deserialize(RedisUtil.get(key)), "通知：新年快乐");
 				}
 			}
 		}

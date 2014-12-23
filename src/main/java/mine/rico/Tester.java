@@ -5,6 +5,7 @@ import mine.rico.util.RedisUtil;
 public class Tester {
 
 	public static void main(String[] args) {
-		System.out.println(RedisUtil.hGet("订阅"));
+		// RedisUtil.flushAll();
+		RedisUtil.publish(Launcher.PUB_KEY, "HELLO");
 	}
 }

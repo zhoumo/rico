@@ -4,6 +4,7 @@ import java.util.Map;
 
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
 
 public class RedisUtil {
 
@@ -25,6 +26,10 @@ public class RedisUtil {
 		return getPool().getResource().exists(key);
 	}
 
+	public static void flushAll() {
+		getPool().getResource().flushAll();
+	}
+
 	public static void set(String key, String value) {
 		getPool().getResource().set(key, value);
 	}
@@ -37,19 +42,23 @@ public class RedisUtil {
 		getPool().getResource().del(key);
 	}
 
-	public static void hSet(String key, String value) {
-		getPool().getResource().hset(key, value, "");
+	public static void hSet(String key, String field) {
+		getPool().getResource().hset(key, field, "");
 	}
 
 	public static Map<String, String> hGet(String key) {
 		return getPool().getResource().hgetAll(key);
 	}
 
-	public static void hDel(String key, String value) {
-		getPool().getResource().hdel(key, value);
+	public static void hDel(String key, String field) {
+		getPool().getResource().hdel(key, field);
 	}
 
-	public static void flushAll() {
-		getPool().getResource().flushAll();
+	public static void subscribe(String channel, JedisPubSub jedisPubSub) {
+		getPool().getResource().subscribe(jedisPubSub, channel);
+	}
+
+	public static void publish(String channel, String message) {
+		getPool().getResource().publish(channel, message);
 	}
 }
