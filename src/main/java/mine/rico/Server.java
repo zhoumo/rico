@@ -34,6 +34,8 @@ public class Server {
 
 	public static final String QQ_PREFIX = "qq:";
 
+	public static boolean RUNNING = false;
+
 	public Server() {
 		client = new WebQQClient("3166262398", "zhoumo", new QQNotifyHandlerProxy(this), new ThreadActorDispatcher());
 	}
@@ -49,6 +51,7 @@ public class Server {
 					ClientUtil.getUserInfo(client);
 					ClientUtil.getBuddyList(client);
 					client.beginPollMsg();
+					RUNNING = true;
 				}
 			}
 		};
@@ -91,8 +94,13 @@ public class Server {
 				text.append(((TextItem) item).getContent().trim().replaceAll("\t|\r", "")).append("\n");
 			}
 		}
-		System.out.println("message: " + text.toString());
-		RedisUtil.set(QQ_PREFIX + msg.getFrom().getUin(), StringUtil.serialize(msg));
-		sendMsg(msg, Robot.chat(text.toString()));
+		if (text.toString().trim().equals("订阅")) {
+			String key = QQ_PREFIX + msg.getFrom().getUin();
+			RedisUtil.set(key, StringUtil.serialize(msg));
+			RedisUtil.hSet("订阅", key);
+			sendMsg(msg, "订阅成功");
+		} else {
+			sendMsg(msg, Robot.chat(text.toString()));
+		}
 	}
 }

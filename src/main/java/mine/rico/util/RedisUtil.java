@@ -1,5 +1,7 @@
 package mine.rico.util;
 
+import java.util.Map;
+
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -19,8 +21,11 @@ public class RedisUtil {
 		return pool;
 	}
 
+	public static boolean exists(String key) {
+		return getPool().getResource().exists(key);
+	}
+
 	public static void set(String key, String value) {
-		System.out.println("set [" + key + "]");
 		getPool().getResource().set(key, value);
 	}
 
@@ -28,11 +33,23 @@ public class RedisUtil {
 		return getPool().getResource().get(key);
 	}
 
-	public static void delete(String key) {
+	public static void del(String key) {
 		getPool().getResource().del(key);
 	}
 
-	public static void flush() {
+	public static void hSet(String key, String value) {
+		getPool().getResource().hset(key, value, "");
+	}
+
+	public static Map<String, String> hGet(String key) {
+		return getPool().getResource().hgetAll(key);
+	}
+
+	public static void hDel(String key, String value) {
+		getPool().getResource().hdel(key, value);
+	}
+
+	public static void flushAll() {
 		getPool().getResource().flushAll();
 	}
 }
